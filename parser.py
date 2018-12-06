@@ -2,9 +2,12 @@ import csv
 import numpy as np
 import pandas as pd
 import random
-
+import nltk.classify
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
+
+
+stopset = list(set(stopwords.words('english')))
 
 
 def labelViral(row):
@@ -12,6 +15,28 @@ def labelViral(row):
         return ('viral')
     else:
         return ('not viral')
+
+
+def word_feats(words):
+    return dict([(word, True) for word in words.split() if word not in stopset])
+
+
+def formatDataNLTK(dataset):
+
+    posids = []
+    negids = []
+
+    for index, row in dataset.iterrows():
+        if row['classification'] == 'viral':
+            posids.append(row['comment_text'])
+        else:
+            negids.append(row['comment_text'])
+
+    pos_feats = [(word_feats(f), 'viral') for f in posids]
+    neg_feats = [(word_feats(f), 'not viral') for f in negids]
+
+    trainfeats = pos_feats + neg_feats
+    return trainfeats
 
 # with open('data/UScomments.csv') as csvfile:
 #     data = pd.read_csv(csvfile, error_bad_lines=False, dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
@@ -40,33 +65,11 @@ single_video = single_video.drop(['comment_id', 'video_id', 'likes', 'replies'],
 # Constructing the training/testing dataset
 ################################################################################
 msk = np.random.rand(len(single_video)) < 0.8
-training_set = single_video[msk]
-testing_set = single_video[~msk]
+training_set = formatDataNLTK(single_video[msk])
+test_set = formatDataNLTK(single_video[~msk])
 
-# Structuring Data for Naive Bayes NLTK package
+# Using the Naive Bayes NLTK package
 ################################################################################
-# Stopwords that are considered neutral
-stopset = list(set(stopwords.words('english')))
-
-
-def word_feats(words):
-    return dict([(word, True) for word in words.split() if word not in stopset])
-
-
-posids = []
-negids = []
-
-for index, row in training_set.iterrows():
-    if row['classification'] == 'viral':
-        posids.append(row['comment_text'])
-    else:
-        negids.append(row['comment_text'])
-
-pos_feats = [(word_feats(f), 'viral') for f in posids]
-neg_feats = [(word_feats(f), 'not viral') for f in negids]
-
-trainfeats = pos_feats + neg_feats
-classifier = NaiveBayesClassifier.train(trainfeats)
-
-print (classifier.classify(word_feats('I did consider getting someone to animate the limb-mangling parts')))
-exit()
+classifier = NaiveBayesClassifier.train(training_set)
+classifier.show_most_informative_features(5)
+print("Our model has an accuracy of:", nltk.classify.accuracy(classifier, test_set))
