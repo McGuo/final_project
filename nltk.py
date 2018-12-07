@@ -6,6 +6,8 @@ import nltk.classify
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
 
+from sklearn.naive_bayes import ComplementNB
+
 
 stopset = list(set(stopwords.words('english')))
 
@@ -60,8 +62,8 @@ def executeOrder66():
     unique_videos = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
     unique_videos.columns = ['Max Likes', 'Average Likes', '# of comments']
 
-    # testModel(data, unique_videos, "guessNotViral")
-    testModel(data, unique_videos, "naiveBayes")
+    testModel(data, unique_videos, "guessNotViral")
+    # testModel(data, unique_videos, "naiveBayes")
 
 
 def testModel(data, unique_videos, model):
