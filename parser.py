@@ -11,6 +11,9 @@ stopset = list(set(stopwords.words('english')))
 
 
 def labelViral(row):
+    """
+    Labels dataframe data with the appropriate classification
+    """
     if row['likes'] > 1:
         return ('viral')
     else:
@@ -18,10 +21,17 @@ def labelViral(row):
 
 
 def word_feats(words):
+    """
+    Not sure tbh...followed a post online lmao
+    Takes in a sentence and returns a dictionary of arrays in tuple form for all the words not in the stopset
+    """
     return dict([(word, True) for word in words.split() if word not in stopset])
 
 
 def formatDataNLTK(dataset):
+    """
+    Takes in a panda dataframe object and returns a representation usabable by NLTK
+    """
 
     posids = []
     negids = []
@@ -38,18 +48,14 @@ def formatDataNLTK(dataset):
     trainfeats = pos_feats + neg_feats
     return trainfeats
 
-# with open('data/UScomments.csv') as csvfile:
-#     data = pd.read_csv(csvfile, error_bad_lines=False, dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
-#     data.to_csv("data/processed.csv")
-
 
 # The inital list of comments for all videos with type check
-data = pd.read_csv("data/processed.csv", error_bad_lines=False,
+data = pd.read_csv("data/comments_processed.csv", error_bad_lines=False,
                    dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
 
 # Generates a new dataframe which are rows of unique video_ids with max likes and average likes columns
-res = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
-res.columns = ['Max Likes', 'Average Likes', '# of comments']
+# res = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
+# res.columns = ['Max Likes', 'Average Likes', '# of comments']
 # print(res)
 
 # Questions to consider: What quantifies as a viral "comment"?
