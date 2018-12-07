@@ -57,10 +57,17 @@ def executeOrder66():
     data = pd.read_csv("data/comments_processed.csv", error_bad_lines=False,
                        dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
 
-    # Generates a new dataframe which are rows of unique video_ids with max likes and average likes columns
     unique_videos = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
     unique_videos.columns = ['Max Likes', 'Average Likes', '# of comments']
 
+    # testModel(data, unique_videos, "guessNotViral")
+    testModel(data, unique_videos, "naiveBayes")
+
+
+def testModel(data, unique_videos, model):
+    """
+    Tests the data under a specific model.
+    """
     total_count = 0
     accuracy = 0
     correct = 0
@@ -71,37 +78,29 @@ def executeOrder66():
             single_video['classification'] = single_video.apply(lambda example: labelViral(example, row['Average Likes']), axis=1)
             msk = np.random.rand(len(single_video)) < 0.8
             test_set = single_video[~msk]
+            training_set = single_video[msk]
 
-            for index, row in test_set.iterrows():
-                if (row['classification'] == 'not viral'):
-                    correct += 1
-                    total_classification += 1
-                else:
-                    total_classification += 1
-            accuracy += correct / total_classification
-            total_count += 1
-            # exit()
+            if model is "guessNotViral":
+                for index, row in test_set.iterrows():
+                    if (row['classification'] == 'not viral'):
+                        correct += 1
+                        total_classification += 1
+                    else:
+                        total_classification += 1
+                accuracy += correct / total_classification
+                total_count += 1
 
-            # Trying to generate a naive bayes classifer model
-            ###################################################################################################################################
-            #
-            # single_video = data.loc[data['video_id'] == index]
-            # single_video['classification'] = single_video.apply(lambda example: labelViral(example, row['Average Likes']), axis=1)
-            #
-            # msk = np.random.rand(len(single_video)) < 0.8
-            # training_set = formatDataNLTK(single_video[msk])
-            # test_set = formatDataNLTK(single_video[~msk])
-            # classifier = NaiveBayesClassifier.train(training_set)
-            # # classifier.show_most_informative_features()
-            # accuracy += nltk.classify.accuracy(classifier, test_set)
-            # total_count += 1
+            elif model is "naiveBayes":
+                classifier = NaiveBayesClassifier.train(formatDataNLTK(training_set))
+                accuracy += nltk.classify.accuracy(classifier, formatDataNLTK(test_set))
+                total_count += 1
+
             print("current average accuracy of:", accuracy / total_count, "with", total_count, "videos analyzed")
 
         except:
             pass
-            ###################################################################################################################################
 
-    print('After analyzing', total_count, "different videos and their comments, we have an average accuracy of", accuracy / total_count, "using naive bayes")
+    print('After analyzing', total_count, "different videos and their comments, we have an average accuracy of", accuracy / total_count, "using", model)
 
 
 executeOrder66()
