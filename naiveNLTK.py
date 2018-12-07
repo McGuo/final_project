@@ -36,10 +36,13 @@ def formatDataNLTK(dataset):
     negids = []
 
     for index, row in dataset.iterrows():
-        if row['classification'] == 'viral':
-            posids.append(str.lower(row['comment_text']))
-        else:
-            negids.append(str.lower(row['comment_text']))
+        try:
+            if row['classification'] == 'viral':
+                posids.append(str.lower(row['comment_text']))
+            else:
+                negids.append(str.lower(row['comment_text']))
+        except:
+            pass
 
     pos_feats = [(word_feats(f), 'viral') for f in posids]
     neg_feats = [(word_feats(f), 'not viral') for f in negids]
@@ -48,54 +51,57 @@ def formatDataNLTK(dataset):
     return trainfeats
 
 
-# The inital list of comments for all videos with type check
-data = pd.read_csv("data/comments_processed.csv", error_bad_lines=False,
-                   dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
+def executeOrder66():
+
+    # The inital list of comments for all videos with type check
+    data = pd.read_csv("data/comments_processed.csv", error_bad_lines=False,
+                       dtype={"comment_id": int, "video_id": str, "comment_text": str, "likes": int, "replies": int})
+
+    # Generates a new dataframe which are rows of unique video_ids with max likes and average likes columns
+    unique_videos = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
+    unique_videos.columns = ['Max Likes', 'Average Likes', '# of comments']
+
+    total_count = 0
+    accuracy = 0
+    correct = 0
+    total_classification = 0
+    for index, row in unique_videos.iterrows():
+        try:
+            single_video = data.loc[data['video_id'] == index]
+            single_video['classification'] = single_video.apply(lambda example: labelViral(example, row['Average Likes']), axis=1)
+            msk = np.random.rand(len(single_video)) < 0.8
+            test_set = single_video[~msk]
+
+            for index, row in test_set.iterrows():
+                if (row['classification'] == 'not viral'):
+                    correct += 1
+                    total_classification += 1
+                else:
+                    total_classification += 1
+            accuracy += correct / total_classification
+            total_count += 1
+            # exit()
+
+            # Trying to generate a naive bayes classifer model
+            ###################################################################################################################################
+            #
+            # single_video = data.loc[data['video_id'] == index]
+            # single_video['classification'] = single_video.apply(lambda example: labelViral(example, row['Average Likes']), axis=1)
+            #
+            # msk = np.random.rand(len(single_video)) < 0.8
+            # training_set = formatDataNLTK(single_video[msk])
+            # test_set = formatDataNLTK(single_video[~msk])
+            # classifier = NaiveBayesClassifier.train(training_set)
+            # # classifier.show_most_informative_features()
+            # accuracy += nltk.classify.accuracy(classifier, test_set)
+            # total_count += 1
+            print("current average accuracy of:", accuracy / total_count, "with", total_count, "videos analyzed")
+
+        except:
+            pass
+            ###################################################################################################################################
+
+    print('After analyzing', total_count, "different videos and their comments, we have an average accuracy of", accuracy / total_count, "using naive bayes")
 
 
-# Generates a new dataframe which are rows of unique video_ids with max likes and average likes columns
-res = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
-res.columns = ['Max Likes', 'Average Likes', '# of comments']
-
-#
-# for index, row in res.iterrows():
-#     if row['classification'] == 'viral':
-#         posids.append(str.lower(row['comment_text']))
-#     else:
-#         negids.append(str.lower(row['comment_text']))
-
-# print(res['# of comments'].max())
-# print(res.loc[res['# of comments'].idxmax()])
-# exit()
-
-
-# Questions to consider: What quantifies as a viral "comment"?
-# It should be proportional to the max likes and average likes for a specific video?
-
-# Extracting a single video_id's row of examples
-################################################################################
-single_video = data.loc[data['video_id'] == "4X6a3G_0HjY"]
-single_video['classification'] = single_video.apply(lambda row: labelViral(row), axis=1)
-single_video = single_video.drop(['comment_id', 'video_id', 'likes', 'replies'], axis=1)
-# print(single_video)
-
-# Constructing the training/testing dataset
-################################################################################
-msk = np.random.rand(len(single_video)) < 0.8
-training_set = formatDataNLTK(single_video[msk])
-
-test_set = formatDataNLTK(single_video[~msk])
-test_set_dataframe = single_video[~msk]
-
-# Using the Naive Bayes NLTK package
-################################################################################
-classifier = NaiveBayesClassifier.train(training_set)
-classifier.show_most_informative_features()
-print("Our model has an accuracy of:", nltk.classify.accuracy(classifier, test_set))
-
-# print (classifier.classify_many(test_set))
-
-# print(classifier.classify(word_feats('hello world')))
-#
-# for index, row in test_set_dataframe.iterrows():
-#     print(classifier.classify(word_feats(row['comment_text'])))
+executeOrder66()
