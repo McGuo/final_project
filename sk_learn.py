@@ -11,9 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import ComplementNB
 from sklearn.neural_network import MLPClassifier
 from sklearn import svm
-
 from sklearn import linear_model
-
 from sklearn.linear_model import LogisticRegressionCV
 
 
@@ -35,9 +33,8 @@ def runModel():
     unique_videos.columns = ['Max Likes', 'Average Likes', '# of comments']
 
     total_count = 0
-
     total_correct = 0
-    total = 0
+    total_examples = 0
 
     for index, row in unique_videos.iterrows():
         try:
@@ -62,8 +59,11 @@ def runModel():
             # log_model = LogisticRegression(solver='lbfgs')
             # model = "Logistic Regression"
 
-            log_model = LogisticRegressionCV(cv=10, multi_class='multinomial')
-            model = "Logistic Regression with Cross Validation and no class_weight"
+            # log_model = LogisticRegressionCV(cv=10, multi_class='multinomial')
+            # model = "Logistic Regression with Cross Validation and no class_weight"
+
+            log_model = LogisticRegression(solver='liblinear', class_weight='balanced')
+            model = "Logistic Regression"
 
             # log_model = ComplementNB()
             # model = "Complement Naive Bayes"
@@ -92,17 +92,17 @@ def runModel():
             # correct / total = accuracy
 
             total_correct += len(y_test) * accuracy_score(y_test, y_pred)
-            total += len(y_test)
+            total_examples += len(y_test)
             total_count += 1
 
         except:
             pass
-        print ("current average accuracy of", total_correct / total, "with", total_count, "videos ran")
+        print ("current average accuracy of", total_correct / total_examples, "with", total_count, "videos ran")
 
     print()
     print()
     print("Using", model, "we had an average accuracy score of",
-          total_correct / total, "with", total_correct, "comments being labeled correctly out of", total)
+          total_correct / total_examples, "with", total_correct, "comments being labeled correctly out of", total_examples)
 
     print()
     print()
