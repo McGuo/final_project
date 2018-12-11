@@ -6,8 +6,6 @@ import nltk.classify
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import stopwords
 
-from sklearn.naive_bayes import ComplementNB
-
 
 stopset = list(set(stopwords.words('english')))
 
@@ -62,8 +60,8 @@ def executeOrder66():
     unique_videos = data.groupby('video_id').agg({'likes': ['max', 'mean'], 'comment_text': ['count']})
     unique_videos.columns = ['Max Likes', 'Average Likes', '# of comments']
 
-    testModel(data, unique_videos, "guessNotViral")
-    # testModel(data, unique_videos, "naiveBayes")
+    # testModel(data, unique_videos, "guessNotViral")
+    testModel(data, unique_videos, "naiveBayes")
 
 
 def testModel(data, unique_videos, model):
@@ -71,9 +69,12 @@ def testModel(data, unique_videos, model):
     Tests the data under a specific model.
     """
     total_count = 0
-    accuracy = 0
+    # accuracy = 0
     correct = 0
     total_classification = 0
+
+    total_correct = 0
+    total_examples = 0
     for index, row in unique_videos.iterrows():
         try:
             single_video = data.loc[data['video_id'] == index]
@@ -89,20 +90,35 @@ def testModel(data, unique_videos, model):
                         total_classification += 1
                     else:
                         total_classification += 1
-                accuracy += correct / total_classification
+                # accuracy += correct / total_classification
                 total_count += 1
 
             elif model is "naiveBayes":
                 classifier = NaiveBayesClassifier.train(formatDataNLTK(training_set))
-                accuracy += nltk.classify.accuracy(classifier, formatDataNLTK(test_set))
+                # accuracy += nltk.classify.accuracy(classifier, formatDataNLTK(test_set))
+                # total_count += 1
+
+                # correct / total = accuracy
+                # Correct = accuracy * total
+
+                correct += len(test_set) * nltk.classify.accuracy(classifier, formatDataNLTK(test_set))
+
+                total_classification += len(test_set)
                 total_count += 1
 
-            print("current average accuracy of:", accuracy / total_count, "with", total_count, "videos analyzed")
+            print("current average accuracy of:", correct / total_classification, "with", total_count, "videos analyzed")
 
         except:
             pass
 
-    print('After analyzing', total_count, "different videos and their comments, we have an average accuracy of", accuracy / total_count, "using", model)
+    print()
+    print()
+    # print('After analyzing', total_count, "different videos and their comments, we have an average accuracy of", accuracy / total_count, "using", model)
+
+    print("Using", model, "we had an average accuracy score of",
+          correct / total_classification, "with", correct, "comments being labeled correctly out of", total_classification)
+    print()
+    print()
 
 
 executeOrder66()

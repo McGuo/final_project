@@ -5,14 +5,14 @@ import random
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
+from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import ComplementNB
-
 from sklearn.neural_network import MLPClassifier
-
 from sklearn import svm
+
+from sklearn import linear_model
 
 
 def labelViral(row, cutoff=1):
@@ -34,7 +34,9 @@ def runModel():
 
     total_count = 0
 
-    total_accuracy = 0
+    total_correct = 0
+    total = 0
+
     for index, row in unique_videos.iterrows():
         try:
             data = []
@@ -55,8 +57,8 @@ def runModel():
             # Model Selection
             ################################################################################
 
-            log_model = LogisticRegression(solver='lbfgs')
-            model = "Logistic Regression"
+            # log_model = LogisticRegression(solver='lbfgs')
+            # model = "Logistic Regression"
 
             # log_model = ComplementNB()
             # model = "Complement Naive Bayes"
@@ -66,6 +68,9 @@ def runModel():
 
             # log_model = svm.SVC(gamma='scale')
             # model = "Support Vector Machines"
+
+            log_model = linear_model.SGDClassifier(max_iter=1000, tol=1e-3)
+            model = "Linear classifiers with SGD training"
 
             ################################################################################
 
@@ -79,17 +84,20 @@ def runModel():
             #     ind = features_nd.tolist().index(X_test[i].tolist())
             #     print(data[ind].strip())
 
+            # correct / total = accuracy
+
+            total_correct += len(y_test) * accuracy_score(y_test, y_pred)
+            total += len(y_test)
             total_count += 1
-            total_accuracy += accuracy_score(y_test, y_pred)
 
         except:
             pass
-        print ("current average accuracy of", total_accuracy / total_count, "with", total_count, "videos ran")
+        print ("current average accuracy of", total_correct / total, "with", total_count, "videos ran")
 
     print()
     print()
     print("Using", model, "we had an average accuracy score of",
-          total_accuracy / total_count, "over", total_count, "unique videos and its comments")
+          total_correct / total, "with", total_correct, "comments being labeled correctly out of", total)
 
     print()
     print()
