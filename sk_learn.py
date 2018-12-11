@@ -10,6 +10,10 @@ from sklearn.metrics import accuracy_score
 
 from sklearn.naive_bayes import ComplementNB
 
+from sklearn.neural_network import MLPClassifier
+
+from sklearn import svm
+
 
 def labelViral(row, cutoff=1):
     """
@@ -46,13 +50,24 @@ def runModel():
             features = vectorizer.fit_transform(data)
             features_nd = features.toarray()
 
-            X_train, X_test, y_train, y_test = train_test_split(features_nd, data_labels, random_state=1234)
+            X_train, X_test, y_train, y_test = train_test_split(features_nd, data_labels)
 
-            # log_model = LogisticRegression(solver='lbfgs')
-            # model = "Logistic Regression"
+            # Model Selection
+            ################################################################################
 
-            log_model = ComplementNB()
-            model = "Complement Naive Bayes"
+            log_model = LogisticRegression(solver='lbfgs')
+            model = "Logistic Regression"
+
+            # log_model = ComplementNB()
+            # model = "Complement Naive Bayes"
+
+            # log_model = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+            # model = "Multi-layer Perceptron"
+
+            # log_model = svm.SVC(gamma='scale')
+            # model = "Support Vector Machines"
+
+            ################################################################################
 
             log_model = log_model.fit(X=X_train, y=y_train)
 
@@ -73,8 +88,11 @@ def runModel():
 
     print()
     print()
-    print("Using", model, "we had an average accuracy score of ",
+    print("Using", model, "we had an average accuracy score of",
           total_accuracy / total_count, "over", total_count, "unique videos and its comments")
+
+    print()
+    print()
 
 
 runModel()
