@@ -14,6 +14,8 @@ from sklearn import svm
 
 from sklearn import linear_model
 
+from sklearn.linear_model import LogisticRegressionCV
+
 
 def labelViral(row, cutoff=1):
     """
@@ -57,8 +59,11 @@ def runModel():
             # Model Selection
             ################################################################################
 
-            # log_model = LogisticRegression(solver='lbfgs')
+            # log_model = LogisticRegression(solver='lbfgs', class_weight='balanced')
             # model = "Logistic Regression"
+
+            log_model = LogisticRegressionCV(cv=10, multi_class='multinomial')
+            model = "Logistic Regression with Cross Validation and no class_weight"
 
             # log_model = ComplementNB()
             # model = "Complement Naive Bayes"
@@ -69,8 +74,8 @@ def runModel():
             # log_model = svm.SVC(gamma='scale')
             # model = "Support Vector Machines"
 
-            log_model = linear_model.SGDClassifier(max_iter=1000, tol=1e-3)
-            model = "Linear classifiers with SGD training"
+            # log_model = linear_model.SGDClassifier(max_iter=1000, tol=1e-3)
+            # model = "Linear classifiers with SGD training"
 
             ################################################################################
 
