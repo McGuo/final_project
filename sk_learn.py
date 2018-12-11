@@ -59,7 +59,7 @@ def runModel():
             # Model Selection
             ################################################################################
 
-            # log_model = LogisticRegression(solver='lbfgs', class_weight='balanced')
+            # log_model = LogisticRegression(solver='lbfgs')
             # model = "Logistic Regression"
 
             log_model = LogisticRegressionCV(cv=10, multi_class='multinomial')
